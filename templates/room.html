@@ -1,23 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Room</title>
+    <title>DropIt - Room</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Room: {{ room_id }}</h2>
 
+    <div class="container">
+
+        <h1>📂 DropIt Room</h1>
+
+        <h3>Room ID: {{ room_id }}</h3>
+
+        <h3>Scan QR to Join</h3>
         <img src="{{ qr_image }}" width="200">
 
-        <h3>Upload File</h3>
+        <hr>
+
+        <!-- FILE UPLOAD SECTION -->
+        <h2>Upload File</h2>
         <form action="/upload/{{ room_id }}" method="post" enctype="multipart/form-data">
             <input type="file" name="file" required>
             <button type="submit">Upload</button>
         </form>
 
-        <h3>Download</h3>
-        <a href="/download/{{ room_id }}">Download File</a>
+        {% if has_file %}
+            <br>
+            <a href="/download/{{ room_id }}">
+                <button>Download File</button>
+            </a>
+        {% endif %}
+
+        <hr>
+
+        <!-- TEXT SHARING SECTION -->
+        <h2>Send Text</h2>
+        <form action="/send-text/{{ room_id }}" method="post">
+            <textarea 
+                name="text" 
+                rows="5" 
+                placeholder="Type your message here..." 
+                required></textarea>
+            <br>
+            <button type="submit">Send Text</button>
+        </form>
+
+        {% if text_content %}
+            <h3>Received Text:</h3>
+            <div class="text-box">
+                {{ text_content }}
+            </div>
+        {% endif %}
+
+        <hr>
+
+        <a href="/">
+            <button>Create New Room</button>
+        </a>
+
     </div>
+
 </body>
 </html>

@@ -1,0 +1,11 @@
+# Firebase secret key
+firebasekey.json
+
+# Python cache
+__pycache__/
+
+# Virtual environment
+venv/
+
+# Environment file
+.env

@@ -51,7 +51,7 @@ async def room_page(request: Request, room_id: str):
         return HTMLResponse("Room not found", status_code=404)
 
     # Generate QR
-    url = f"http://127.0.0.1:8000/room/{room_id}"
+    url = str(request.base_url) + f"room/{room_id}"
     qr_path = f"static/{room_id}.png"
 
     img = qrcode.make(url)

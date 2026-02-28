@@ -91,36 +91,16 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!activeListeners.has(roomId)) {
       activeListeners.add(roomId);
       
-      // Listen for real-time updates from other users
+      // Listen for real-time updates from any user and copy into textarea
       onSnapshot(doc(db, "rooms", roomId), (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
-          const receivedText = data.text;
+          const receivedText = data.text || "";
           
-          // Create a display div for received text (persistent live view)
-          let liveDisplay = document.getElementById(`live-text-${roomId}`);
-          
-          if (receivedText && receivedText !== textarea.value) {
-            // Only update the UI if text changed and it's not from current user
-            if (!liveDisplay) {
-              liveDisplay = document.createElement("div");
-              liveDisplay.id = `live-text-${roomId}`;
-              liveDisplay.style.cssText = `
-                margin-top: 15px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                background-color: #f9f9f9;
-                max-height: 150px;
-                overflow-y: auto;
-                word-wrap: break-word;
-              `;
-              liveDisplay.innerHTML = "<strong>Live Text:</strong><p></p>";
-              textarea.parentNode.insertBefore(liveDisplay, textarea.nextSibling);
-            }
-            
-            // Update the display div with received text
-            liveDisplay.querySelector("p").textContent = receivedText;
+          // always update textarea value if it differs; this lets both
+          // participants see exactly what the other is currently typing
+          if (receivedText !== textarea.value) {
+            textarea.value = receivedText;
           }
         }
       });

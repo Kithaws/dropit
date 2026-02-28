@@ -146,11 +146,12 @@ Watch the demo video here: https://drive.google.com/drive/folders/1s1p3AtZaEt1sj
 
 ### AI Tools Used (Optional - For Transparency Bonus)
 
-**Tool Used:** GitHub Copilot, ChatGPT (Raptor mini)
+**Tool Used:** GitHub Copilot, ChatGPT (Raptor mini), Eraser
 
 **Purpose:**
 - Generated boilerplate and refactored Python/JavaScript code
 - Assisted with real-time collaboration logic and CSS styling
+- Created Architecture diagrams from already existing plan
 
 **Key Prompts Used:**
 - "Create a FastAPI endpoint for file upload and JSON response"
@@ -170,8 +171,8 @@ Watch the demo video here: https://drive.google.com/drive/folders/1s1p3AtZaEt1sj
 
 ## Team Contributions
 
-- SWA: Backend development, Firebase integration, real-time synchronization
-- ANU: Frontend layout, UI styling, 
+- SWATHI: Backend development, Firebase integration, real-time synchronization
+- ANASWARA: Frontend layout, UI styling, 
 
 ---
 

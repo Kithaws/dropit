@@ -23,6 +23,26 @@ button:hover {
     background: #4f46e5;
 }
 
-input {
+input, textarea {
     margin: 10px;
+    width: 80%;
+    max-width: 500px;
+    padding: 8px;
+    background: #1f2937; /* dark grey */
+    color: white;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* make sure any dynamically inserted live text uses contrast */
+#live-text {
+    background: #1f2937;
+    color: white;
 }

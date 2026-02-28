@@ -147,7 +147,7 @@ async def room_page(request: Request, room_id: str):
 
 
 @app.post("/upload/{room_id}")
-async def upload_file(room_id: str, file: UploadFile = File(...)):
+async def upload_file(request: Request, room_id: str, file: UploadFile = File(...)):
 
     with closing(get_db()) as conn:
         cursor = conn.cursor()
@@ -187,6 +187,10 @@ async def upload_file(room_id: str, file: UploadFile = File(...)):
             (unique_name, room_id)
         )
         conn.commit()
+
+    # if the upload was done via AJAX (our client JS), return JSON instead
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return {"fileUrl": f"/download/{room_id}"}
 
     return RedirectResponse(f"/room/{room_id}", status_code=302)
 

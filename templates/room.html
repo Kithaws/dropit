@@ -16,6 +16,20 @@
 
         <hr>
 
+        <!-- FILE SHARING SECTION -->
+        <h2>Share a File</h2>
+        <!-- file input will auto-upload via JS; no submit button required -->
+        <input type="file" name="file" id="file-input">
+        {% if has_file %}
+            <div id="file-display" class="text-box" style="margin-top:10px;">
+                <a href="/download/{{ room_id }}" target="_blank">Download file</a>
+            </div>
+        {% else %}
+            <div id="file-display" class="text-box" style="margin-top:10px;"></div>
+        {% endif %}
+
+        <hr>
+
         <!-- TEXT SHARING SECTION -->
         <h2>Send Text</h2>
         <form action="/send-text/{{ room_id }}" method="post">

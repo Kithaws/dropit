@@ -56,51 +56,102 @@ function debounce(func, delay) {
 // Track active listeners to avoid duplicates
 const activeListeners = new Set();
 
-// Real-time text synchronization across multiple users
+// Upload helper for AJAX file transfers
+async function uploadRoomFile(roomId, file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const resp = await fetch(`/upload/${roomId}`, {
+    method: "POST",
+    body: fd,
+    headers: { "X-Requested-With": "XMLHttpRequest" }
+  });
+  if (!resp.ok) throw new Error("Upload failed");
+  return resp.json(); // expects { fileUrl: "/download/room" }
+}
+
+// Render file (image or link) inside #file-display
+function renderFile(fileUrl) {
+  const display = document.getElementById("file-display");
+  if (!display) return;
+  display.innerHTML = "";
+
+  // guess by extension if we should show an image
+  const ext = fileUrl.split(".").pop().toLowerCase();
+  if (["png","jpg","jpeg","gif","bmp","webp"].includes(ext)) {
+    const img = document.createElement("img");
+    img.src = fileUrl;
+    display.appendChild(img);
+  } else {
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.textContent = "Download file";
+    a.target = "_blank";
+    display.appendChild(a);
+  }
+}
+
+// Real-time text + file synchronization across multiple users
 window.addEventListener("DOMContentLoaded", () => {
   const textForm = document.querySelector("form[action^='/send-text']");
   const textarea = textForm?.querySelector("textarea[name='text']");
-  
+  const fileInput = document.querySelector("input[type='file']");
+  const roomId = window.location.pathname.split("/").pop();
+
+  // ensure firestore document exists even if nobody has typed yet
+  if (roomId) {
+    createRoomInFirestore(roomId);
+  }
+
+  if (fileInput && roomId) {
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (file) {
+        try {
+          const result = await uploadRoomFile(roomId, file);
+          // update firestore with the URL so others see it live
+          await setDoc(doc(db, "rooms", roomId), { fileUrl: result.fileUrl }, { merge: true });
+        } catch (e) {
+          console.error("File upload error", e);
+        }
+      }
+    });
+  }
+
   if (textForm && textarea) {
     const roomId = window.location.pathname.split("/").pop();
     
-    // Store original submit handler
     const debouncedUpdate = debounce(async (text) => {
-      // Update Firebase as user types (not just on submit)
       if (text.trim()) {
         await sendTextToFirestore(roomId, text);
       }
-    }, 500); // Update after 500ms of no typing
-    
-    // Update Firebase as user types in real-time
+    }, 500);
+
     textarea.addEventListener("input", () => {
       const text = textarea.value;
       debouncedUpdate(text);
     });
-    
-    // Still allow form submission
+
     textForm.addEventListener("submit", async event => {
       const finalText = textarea.value;
       if (roomId && finalText) {
         await sendTextToFirestore(roomId, finalText);
       }
-      // Allow form to submit normally (redirect will clear the page anyway)
     });
-    
-    // Set up real-time listener if not already active for this room
+
     if (!activeListeners.has(roomId)) {
       activeListeners.add(roomId);
-      
-      // Listen for real-time updates from any user and copy into textarea
+
       onSnapshot(doc(db, "rooms", roomId), (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
           const receivedText = data.text || "";
-          
-          // always update textarea value if it differs; this lets both
-          // participants see exactly what the other is currently typing
+          const fileUrl = data.fileUrl;
+
           if (receivedText !== textarea.value) {
             textarea.value = receivedText;
+          }
+          if (fileUrl) {
+            renderFile(fileUrl);
           }
         }
       });

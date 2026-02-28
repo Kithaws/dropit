@@ -41,6 +41,23 @@ textarea {
     min-height: 100px;
 }
 
+/* image styling: dark background with border so pictures stand out */
+img {
+    max-width: 80%;
+    border: 2px solid #374151;
+    border-radius: 6px;
+    background: #1f2937;
+    padding: 4px;
+}
+
+/* container used previously for received text or other panels */
+.text-box {
+    background: #1f2937;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+}
+
 /* make sure any dynamically inserted live text uses contrast */
 #live-text {
     background: #1f2937;

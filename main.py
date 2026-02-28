@@ -3,6 +3,7 @@ import shutil
 import secrets
 import time
 import sqlite3
+from pathlib import Path
 from contextlib import closing
 from fastapi import FastAPI, UploadFile, File, Request, BackgroundTasks, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
@@ -12,25 +13,28 @@ import qrcode
 
 app = FastAPI(title="Dropit 🔥")
 
-UPLOAD_DIR = "temp_uploads"
-STATIC_DIR = "static"
+# Use absolute paths for Windows compatibility
+BASE_DIR = Path(__file__).parent
+UPLOAD_DIR = BASE_DIR / "temp_uploads"
+STATIC_DIR = BASE_DIR / "static"
 ROOM_EXPIRY = 600  # 10 minutes
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB limit
 
 # Create required folders
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(STATIC_DIR, exist_ok=True)
+UPLOAD_DIR.mkdir(exist_ok=True)
+STATIC_DIR.mkdir(exist_ok=True)
 
 # Templates & Static
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # -------------------------
 # DATABASE SETUP
 # -------------------------
 
 def get_db():
-    conn = sqlite3.connect("dropit.db", check_same_thread=False)
+    db_path = str(BASE_DIR / "dropit.db")
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -57,9 +61,9 @@ def delete_room(room_id: str):
         row = cursor.fetchone()
 
         if row and row["filename"]:
-            file_path = os.path.join(UPLOAD_DIR, row["filename"])
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            file_path = UPLOAD_DIR / row["filename"]
+            if file_path.exists():
+                file_path.unlink()
 
         cursor.execute("DELETE FROM rooms WHERE room_id=?", (room_id,))
         conn.commit()
@@ -124,11 +128,11 @@ async def room_page(request: Request, room_id: str):
 
     # Generate QR
     url = str(request.base_url) + f"room/{room_id}"
-    qr_path = os.path.join(STATIC_DIR, f"{room_id}.png")
+    qr_path = STATIC_DIR / f"{room_id}.png"
 
-    if not os.path.exists(qr_path):
+    if not qr_path.exists():
         img = qrcode.make(url)
-        img.save(qr_path)
+        img.save(str(qr_path))
 
     return templates.TemplateResponse(
         "room.html",
@@ -166,13 +170,16 @@ async def upload_file(room_id: str, file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File too large (max 20MB)")
 
     safe_name = secrets.token_hex(8)
-    extension = os.path.splitext(file.filename)[1]
+    extension = Path(file.filename).suffix if file.filename else ""
     unique_name = f"{safe_name}{extension}"
 
-    file_path = os.path.join(UPLOAD_DIR, unique_name)
+    file_path = UPLOAD_DIR / unique_name
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        with open(str(file_path), "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
     with closing(get_db()) as conn:
         conn.execute(
@@ -232,11 +239,11 @@ async def download_file(room_id: str, background_tasks: BackgroundTasks):
     if not filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
-    file_path = os.path.join(UPLOAD_DIR, filename)
+    file_path = UPLOAD_DIR / filename
 
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
 
     background_tasks.add_task(delete_room, room_id)
 
-    return FileResponse(file_path, filename=filename)
+    return FileResponse(str(file_path), filename=filename)

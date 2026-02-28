@@ -103,18 +103,44 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   if (fileInput && roomId) {
+    // normal file selection
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files[0];
       if (file) {
         try {
           const result = await uploadRoomFile(roomId, file);
-          // update firestore with the URL so others see it live
           await setDoc(doc(db, "rooms", roomId), { fileUrl: result.fileUrl }, { merge: true });
         } catch (e) {
           console.error("File upload error", e);
         }
       }
     });
+
+    // drag & drop support on the surrounding upload-area
+    const uploadArea = document.querySelector(".upload-area");
+    if (uploadArea) {
+      uploadArea.addEventListener("dragover", e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = "#6b7280";
+      });
+      uploadArea.addEventListener("dragleave", e => {
+        uploadArea.style.borderColor = "#4b5563";
+      });
+      uploadArea.addEventListener("drop", async e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = "#4b5563";
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+          const file = dt.files[0];
+          try {
+            const result = await uploadRoomFile(roomId, file);
+            await setDoc(doc(db, "rooms", roomId), { fileUrl: result.fileUrl }, { merge: true });
+          } catch (err) {
+            console.error("Drag-drop upload failed", err);
+          }
+        }
+      });
+    }
   }
 
   if (textForm && textarea) {

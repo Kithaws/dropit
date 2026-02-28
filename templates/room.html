@@ -18,8 +18,10 @@
 
         <!-- FILE SHARING SECTION -->
         <h2>Share a File</h2>
-        <!-- file input will auto-upload via JS; no submit button required -->
-        <input type="file" name="file" id="file-input">
+        <div class="upload-area">
+            <p>Click or drag a file here to upload</p>
+            <input type="file" name="file" id="file-input">
+        </div>
         {% if has_file %}
             <div id="file-display" class="text-box" style="margin-top:10px;">
                 <a href="/download/{{ room_id }}" target="_blank">Download file</a>

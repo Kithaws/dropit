@@ -14,25 +14,6 @@
 
         <h3>Room ID: {{ room_id }}</h3>
 
-        <h3>Scan QR to Join</h3>
-        <img src="{{ qr_image }}" width="200">
-
-        <hr>
-
-        <!-- FILE UPLOAD SECTION -->
-        <h2>Upload File</h2>
-        <form action="/upload/{{ room_id }}" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" required>
-            <button type="submit">Upload</button>
-        </form>
-
-        {% if has_file %}
-            <br>
-            <a href="/download/{{ room_id }}">
-                <button>Download File</button>
-            </a>
-        {% endif %}
-
         <hr>
 
         <!-- TEXT SHARING SECTION -->
@@ -46,13 +27,6 @@
             <br>
             <button type="submit">Send Text</button>
         </form>
-
-        {% if text_content %}
-            <h3>Received Text:</h3>
-            <div class="text-box">
-                {{ text_content }}
-            </div>
-        {% endif %}
 
         <hr>
 
